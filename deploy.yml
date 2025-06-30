@@ -1,10 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy Tableau Extension to GitHub Pages
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -29,7 +28,7 @@ jobs:
         uses: actions/configure-pages@v4
         
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
           
