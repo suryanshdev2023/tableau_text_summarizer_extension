@@ -60,7 +60,6 @@ Get your free API key at: https://platform.openai.com/api-keys
 **No Text Data Found?**
 - Ensure your selected column contains string/text data
 - Check that the worksheet has data rows
-- Try a different text column
 
 ## 📞 Support
 
