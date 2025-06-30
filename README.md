@@ -6,7 +6,6 @@ A powerful AI-powered extension that summarizes text data in your Tableau dashbo
 
 ## 🚀 Quick Start
 
-### Option 1: Use Hosted Version (Recommended)
 1. **Download the manifest file**: [text_summarizer.trex](https://suryanshdev2023.github.io/tableau_text_summarizer_extension/text_summarizer.trex)
 2. **In Tableau Desktop:**
    - Go to **Help → Settings and Performance → Manage Dashboard Extensions**
@@ -15,14 +14,6 @@ A powerful AI-powered extension that summarizes text data in your Tableau dashbo
    - Select the `.trex` file when prompted
    - Enter your OpenAI API key and start summarizing!
 
-### Option 2: Run Locally
-1. **Double-click `start.bat`** (starts local web server)
-2. **In Tableau Dashboard:**  
-   - Add "Extension" object  
-   - Select `text_summarizer.trex` file  
-   - Enter OpenAI API key  
-   - Choose worksheet/column  
-   - Click "Summarize Text"
 
 ## 🔑 Get OpenAI API Key
 
@@ -30,11 +21,9 @@ Get your free API key at: https://platform.openai.com/api-keys
 
 ## ✨ Features
 
-- **AI-Powered Summarization**: Uses GPT-4o-mini for intelligent text analysis
+- **AI-Powered Summarization**: Uses GPT-4.1-nano for cost-effective and intelligent text analysis
 - **Easy Integration**: Works with any Tableau worksheet containing text data
-- **Direct API Integration**: No CORS issues when used in Tableau Desktop environment
 - **User-Friendly Interface**: Clean, modern UI with progress indicators
-- **Flexible Text Length**: Handles large text datasets with smart truncation
 
 ## 🛠️ How It Works
 
