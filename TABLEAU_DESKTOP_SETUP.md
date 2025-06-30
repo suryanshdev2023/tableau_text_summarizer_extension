@@ -28,20 +28,7 @@
 3. **Are you in a Dashboard view?** (not Worksheet view)
 4. **Try refreshing the extension**
 
-### Debug Steps:
-1. Press **F12** to open browser console
-2. Look for log messages showing worksheet names
-3. Should see: "Found X worksheet(s) in dashboard"
-
 ## 🎯 **The Key Rule:**
 **Tableau Desktop extensions can ONLY see worksheets that are placed ON the current dashboard**
-
-## ✅ **Working Setup:**
-```
-Dashboard Layout:
-├── Worksheet 1 (with your text data)
-├── Worksheet 2 (optional)  
-└── Extension Object (Text Summarizer)
-```
 
 Then the extension will see and list your worksheets! 🚀 
