@@ -30,9 +30,9 @@ Get your free API key at: https://platform.openai.com/api-keys
 
 ## ✨ Features
 
-- **AI-Powered Summarization**: Uses GPT-3.5-turbo for intelligent text analysis
+- **AI-Powered Summarization**: Uses GPT-4o-mini for intelligent text analysis
 - **Easy Integration**: Works with any Tableau worksheet containing text data
-- **Multiple CORS Solutions**: Reliable API connectivity with automatic fallbacks
+- **Direct API Integration**: No CORS issues when used in Tableau Desktop environment
 - **User-Friendly Interface**: Clean, modern UI with progress indicators
 - **Flexible Text Length**: Handles large text datasets with smart truncation
 
