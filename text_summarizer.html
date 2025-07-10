@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Summarizer - Simple Version</title>
+    <title>Text Summarizer - AI Extension</title>
     <script src="tableau.extensions.1.latest.js"></script>
     <style>
         * {
@@ -14,71 +14,102 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
 
         .container {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            max-width: 600px;
+            padding: 20px;
             width: 100%;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            text-align: left;
+            margin-bottom: 15px;
+            position: relative;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e5e9;
         }
 
         .header h1 {
             color: #333;
-            font-size: 2.2em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            margin-bottom: 0;
         }
 
-        .header p {
-            color: #666;
-            font-size: 1.1em;
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 0;
+            background: linear-gradient(135deg, #4285f4 0%, #9c27b0 100%);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: 600;
             color: #333;
+            font-size: 14px;
         }
 
-        select, input {
+        select, input, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 14px;
             transition: border-color 0.3s;
         }
 
-        select:focus, input:focus {
+        .modal select, .modal input, .modal textarea {
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        select:focus, input:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
         }
 
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4285f4 0%, #9c27b0 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -88,7 +119,7 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
         }
 
         .btn:disabled {
@@ -97,43 +128,59 @@
             transform: none;
         }
 
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        .modal .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 15px 5px;
+        }
+
         .result-container {
-            margin-top: 30px;
-            padding: 20px;
+            margin-top: 15px;
+            padding: 15px;
             background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
             display: none;
         }
 
         .result-container h3 {
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
         }
 
         .result-text {
-            line-height: 1.6;
+            line-height: 1.5;
             color: #555;
             background: white;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 4px;
             border: 1px solid #e1e5e9;
+            font-size: 13px;
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 10px;
         }
 
         @keyframes spin {
@@ -143,9 +190,9 @@
 
         .status {
             margin: 10px 0;
-            padding: 10px;
+            padding: 8px;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .status.info {
@@ -166,51 +213,104 @@
             border: 1px solid #ffcdd2;
         }
 
-        .warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.3);
         }
 
-        .warning strong {
-            display: block;
-            margin-bottom: 5px;
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 800px;
+            height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+
+
+        .config-status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .config-status.configured {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .config-status.not-configured {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📝 Text Summarizer</h1>
-            <p>Consolidate and summarize your text data with AI</p>
+            <button class="settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
+            <h1>📝 AI Text Summarizer</h1>
         </div>
 
-
-
-        <div class="form-group">
-            <label for="worksheetSelect">Select Worksheet:</label>
-            <select id="worksheetSelect">
-                <option value="">Loading worksheets...</option>
-            </select>
+        <div class="config-status" id="configStatus">
+            Click settings to configure your worksheet and API key
         </div>
 
         <div class="form-group">
-            <label for="columnSelect">Select Text Column:</label>
-            <select id="columnSelect">
-                <option value="">Select a worksheet first</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="apiKey">OpenAI API Key:</label>
-            <input type="password" id="apiKey" placeholder="Enter your OpenAI API key">
+            <label for="customPrompt">Custom Prompt:</label>
+            <textarea id="customPrompt" placeholder="Enter your custom prompt here...">Provide a comprehensive summary of the following text entries. Focus on the key themes, main points, and overall insights:</textarea>
         </div>
 
         <button class="btn" id="summarizeBtn" onclick="summarizeText()">
-            🚀 Summarize Text
+            🚀 Generate
         </button>
 
         <div class="loading" id="loading">
@@ -221,25 +321,84 @@
         <div id="status"></div>
 
         <div class="result-container" id="resultContainer">
-            <h3>📋 Summary Result</h3>
+            <h3>📋 Result</h3>
             <div class="result-text" id="resultText"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettings()">&times;</span>
+            <div class="modal-header">
+                <h2>⚙️ Configuration Settings</h2>
+                <p>Configure your data source and AI settings</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+                <div class="form-group">
+                    <label for="worksheetSelect">Select Worksheet:</label>
+                    <select id="worksheetSelect">
+                        <option value="">Loading worksheets...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="columnSelect">Select Text Column:</label>
+                    <select id="columnSelect">
+                        <option value="">Select a worksheet first</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="apiKey">OpenAI API Key:</label>
+                <input type="password" id="apiKey" placeholder="Enter your OpenAI API key">
+            </div>
+
+            <div class="form-group">
+                <label for="tokenLimit">Token Limit:</label>
+                <input type="number" id="tokenLimit" value="5000" min="1000" max="15000" placeholder="5000">
+                <small style="color: #666; font-size: 13px;">Maximum tokens to send to AI (affects cost and processing time)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="systemRole">System Role:</label>
+                <textarea id="systemRole" rows="4" placeholder="Define the AI's role and behavior...">You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px;">
+                <button class="btn" onclick="saveConfiguration()">💾 Save Configuration</button>
+                <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+            </div>
         </div>
     </div>
 
     <script>
         let dashboard, worksheets;
+        let config = {
+            worksheet: '',
+            column: '',
+            apiKey: '',
+            tokenLimit: 5000,
+            systemRole: 'You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.'
+        };
+
+
 
         // Initialize the extension
         tableau.extensions.initializeAsync().then(() => {
             dashboard = tableau.extensions.dashboardContent.dashboard;
             worksheets = dashboard.worksheets;
             
+            loadConfiguration();
+            populateWorksheetDropdown();
+            updateConfigStatus();
+            
             if (worksheets.length > 0) {
-                populateWorksheetDropdown();
-                showStatus(`Extension initialized successfully! Found ${worksheets.length} worksheet(s).`, 'success');
+                showStatus(`Extension initialized! Found ${worksheets.length} worksheet(s).`, 'success');
             } else {
-                populateWorksheetDropdown();
-                showStatus('⚠️ No worksheets found. Please drag worksheets onto this dashboard.', 'error');
+                showStatus('⚠️ No worksheets found. Please add worksheets to your dashboard.', 'error');
             }
             
         }, (err) => {
@@ -247,11 +406,91 @@
             showStatus('Error initializing extension: ' + err.message, 'error');
         });
 
+        // Configuration Management
+        function loadConfiguration() {
+            try {
+                const saved = localStorage.getItem('textSummarizerConfig');
+                if (saved) {
+                    const savedConfig = JSON.parse(saved);
+                    config = { ...config, ...savedConfig };
+                    
+                    // Apply loaded config to form elements
+                    document.getElementById('apiKey').value = config.apiKey || '';
+                    document.getElementById('tokenLimit').value = config.tokenLimit || 5000;
+                    document.getElementById('systemRole').value = config.systemRole || config.systemRole;
+                }
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+            }
+        }
+
+        function saveConfiguration() {
+            try {
+                config.worksheet = document.getElementById('worksheetSelect').value;
+                config.column = document.getElementById('columnSelect').value;
+                config.apiKey = document.getElementById('apiKey').value;
+                config.tokenLimit = parseInt(document.getElementById('tokenLimit').value) || 5000;
+                config.systemRole = document.getElementById('systemRole').value;
+                
+                localStorage.setItem('textSummarizerConfig', JSON.stringify(config));
+                updateConfigStatus();
+                closeSettings();
+                showStatus('Configuration saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving configuration:', error);
+                showStatus('Error saving configuration: ' + error.message, 'error');
+            }
+        }
+
+        function updateConfigStatus() {
+            const statusDiv = document.getElementById('configStatus');
+            const isConfigured = config.worksheet && config.column && config.apiKey;
+            
+            if (isConfigured) {
+                // Check if configured worksheet and column still exist
+                const worksheetExists = worksheets && worksheets.find(ws => ws.name === config.worksheet);
+                
+                if (worksheetExists) {
+                    statusDiv.className = 'config-status configured';
+                    statusDiv.textContent = `✅ Configured: ${config.worksheet} → ${config.column}`;
+                } else {
+                    statusDiv.className = 'config-status not-configured';
+                    statusDiv.textContent = `⚠️ Worksheet "${config.worksheet}" not found - Update configuration`;
+                }
+            } else {
+                statusDiv.className = 'config-status not-configured';
+                statusDiv.textContent = '⚠️ Configuration required - Click settings to setup';
+            }
+        }
+
+        // Modal Management
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'block';
+            
+            // Set current values
+            document.getElementById('worksheetSelect').value = config.worksheet || '';
+            document.getElementById('columnSelect').value = config.column || '';
+            document.getElementById('apiKey').value = config.apiKey || '';
+            document.getElementById('tokenLimit').value = config.tokenLimit || 5000;
+            document.getElementById('systemRole').value = config.systemRole || '';
+            
+            // Trigger column load if worksheet is selected
+            if (config.worksheet) {
+                onWorksheetChange();
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+
+
         function populateWorksheetDropdown() {
             const worksheetSelect = document.getElementById('worksheetSelect');
             
             if (!worksheets || worksheets.length === 0) {
-                worksheetSelect.innerHTML = '<option value="">⚠️ No worksheets found in dashboard</option>';
+                worksheetSelect.innerHTML = '<option value="">⚠️ No worksheets found</option>';
                 return;
             }
             
@@ -301,47 +540,53 @@
                     columnSelect.appendChild(option);
                 }
             });
+            
+            // Restore saved column selection
+            if (config.column) {
+                columnSelect.value = config.column;
+            }
         }
 
         async function summarizeText() {
-            const worksheetSelect = document.getElementById('worksheetSelect');
-            const columnSelect = document.getElementById('columnSelect');
-            const apiKeyInput = document.getElementById('apiKey');
+            const customPrompt = document.getElementById('customPrompt').value.trim();
             
-            const selectedWorksheet = worksheetSelect.value;
-            const selectedColumn = columnSelect.value;
-            const apiKey = apiKeyInput.value.trim();
-            
-            // Validation
-            if (!selectedWorksheet) {
-                showStatus('Please select a worksheet', 'error');
+            // Basic validation
+            if (!config.worksheet || !config.column || !config.apiKey) {
+                showStatus('Please configure your settings first (click the gear icon)', 'error');
+                openSettings();
                 return;
             }
             
-            if (!selectedColumn) {
-                showStatus('Please select a text column', 'error');
-                return;
-            }
-            
-            if (!apiKey) {
-                showStatus('Please enter your OpenAI API key', 'error');
+            if (!customPrompt) {
+                showStatus('Please enter a custom prompt', 'error');
                 return;
             }
             
             try {
                 showLoading(true);
-                showStatus('Extracting data from Tableau...', 'info');
+                showStatus('Validating configuration...', 'info');
                 
-                // Get the worksheet data
-                const worksheet = worksheets.find(ws => ws.name === selectedWorksheet);
+                // Check if configured worksheet still exists
+                const worksheet = worksheets.find(ws => ws.name === config.worksheet);
+                if (!worksheet) {
+                    showLoading(false);
+                    showStatus(`❌ Worksheet "${config.worksheet}" not found. Please update configuration.`, 'error');
+                    openSettings();
+                    return;
+                }
+                
+                showStatus('Extracting data from Tableau...', 'info');
                 const dataTable = await worksheet.getSummaryDataAsync();
                 
-                // Find the column index
-                const columnIndex = dataTable.columns.findIndex(col => col.fieldName === selectedColumn);
-                
+                // Check if configured column still exists
+                const columnIndex = dataTable.columns.findIndex(col => col.fieldName === config.column);
                 if (columnIndex === -1) {
-                    throw new Error('Selected column not found in worksheet data');
+                    showLoading(false);
+                    showStatus(`❌ Column "${config.column}" not found in worksheet "${config.worksheet}". Please update configuration.`, 'error');
+                    openSettings();
+                    return;
                 }
+
                 
                 // Extract text data
                 const textData = [];
@@ -356,42 +601,41 @@
                     throw new Error('No text data found in the selected column');
                 }
                 
-                showStatus(`Found ${textData.length} text entries. Sending to OpenAI...`, 'info');
+                showStatus(`Found ${textData.length} text entries. Processing with AI...`, 'info');
                 
                 // Combine texts
                 const combinedText = textData.join('\n\n---\n\n');
                 
-                // Limit text length (OpenAI has token limits)
-                const maxLength = 10000;
+                // Apply token limit
+                const maxLength = Math.min(config.tokenLimit * 4, 50000); // Rough char to token conversion
                 const finalText = combinedText.length > maxLength 
-                    ? combinedText.substring(0, maxLength) + '...\n\n[Text truncated due to length]'
+                    ? combinedText.substring(0, maxLength) + '...\n\n[Text truncated due to token limit]'
                     : combinedText;
                 
-                // Create the prompt
-                const prompt = `Please provide a comprehensive summary of the following text entries in exactly 100 words. Focus on the key themes, main points, and overall insights:\n\n${finalText}\n\nSummary (100 words):`;
+                // Create the full prompt
+                const fullPrompt = `${customPrompt}\n\n${finalText}`;
                 
-                // Direct OpenAI API call - works in Tableau Desktop environment
                 showStatus('Sending request to OpenAI...', 'info');
                 
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
+                        'Authorization': `Bearer ${config.apiKey}`
                     },
                     body: JSON.stringify({
-                        model: 'gpt-4.1-nano',
+                        model: 'gpt-4o-mini',
                         messages: [
                             {
                                 role: 'system',
-                                content: 'You are a professional text summarizer. Provide clear, concise summaries that capture the essence of the provided text.'
+                                content: config.systemRole
                             },
                             {
                                 role: 'user',
-                                content: prompt
+                                content: fullPrompt
                             }
                         ],
-                        max_tokens: 150,
+                        max_tokens: Math.min(config.tokenLimit, 4000),
                         temperature: 0.3
                     })
                 });
@@ -408,18 +652,18 @@
                 document.getElementById('resultText').textContent = summary;
                 document.getElementById('resultContainer').style.display = 'block';
                 
-                showStatus('Text summarization completed successfully!', 'success');
+                showStatus(`✅ Generation completed! Processed ${textData.length} entries.`, 'success');
                 
             } catch (error) {
                 console.error('Error:', error);
                 
                 // Handle specific error types
                 if (error.message.includes('CORS') || error.message.includes('fetch')) {
-                    showStatus('Network Error: Please check your internet connection and API key. If using in browser, try the Tableau Desktop version.', 'error');
-                } else if (error.message.includes('401')) {
-                    showStatus('API Key Error: Invalid OpenAI API key. Please check your key and try again.', 'error');
+                    showStatus('Network Error: Please check your internet connection and API key.', 'error');
+                } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                    showStatus('Invalid API Key: Please check your OpenAI API key in settings.', 'error');
                 } else if (error.message.includes('429')) {
-                    showStatus('Rate Limit Error: Too many requests. Please wait a moment and try again.', 'error');
+                    showStatus('Rate Limit: Too many requests. Please wait and try again.', 'error');
                 } else {
                     showStatus('Error: ' + error.message, 'error');
                 }
@@ -455,7 +699,13 @@
             }
         }
 
-
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target === modal) {
+                closeSettings();
+            }
+        }
     </script>
 </body>
 </html> 
