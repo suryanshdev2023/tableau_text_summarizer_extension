@@ -309,6 +309,10 @@
             <textarea id="customPrompt" placeholder="Enter your custom prompt here...">Provide a comprehensive summary of the following text entries. Focus on the key themes, main points, and overall insights:</textarea>
         </div>
 
+        <button class="btn btn-secondary" onclick="saveCustomPrompt()" style="margin-bottom: 5px;">
+            💾 Save Custom Prompt
+        </button>
+
         <button class="btn" id="summarizeBtn" onclick="summarizeText()">
             🚀 Generate
         </button>
@@ -333,6 +337,11 @@
             <div class="modal-header">
                 <h2>⚙️ Configuration Settings</h2>
                 <p>Configure your data source and AI settings</p>
+                <div style="background: #e8f4fd; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #1976d2;">
+                    <small style="color: #1976d2; font-weight: 500;">
+                        🔒 <strong>Security:</strong> Your settings are stored locally and encrypted by Tableau. Only you can access them.
+                    </small>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
@@ -381,7 +390,8 @@
             column: '',
             apiKey: '',
             tokenLimit: 5000,
-            systemRole: 'You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.'
+            systemRole: 'You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.',
+            customPrompt: 'Provide a comprehensive summary of the following text entries. Focus on the key themes, main points, and overall insights:'
         };
 
 
@@ -409,16 +419,20 @@
         // Configuration Management
         function loadConfiguration() {
             try {
-                const saved = localStorage.getItem('textSummarizerConfig');
-                if (saved) {
-                    const savedConfig = JSON.parse(saved);
+                // Load from Tableau settings (more reliable than localStorage)
+                const settings = tableau.extensions.settings.getAll();
+                
+                if (settings.textSummarizerConfig) {
+                    const savedConfig = JSON.parse(settings.textSummarizerConfig);
                     config = { ...config, ...savedConfig };
-                    
-                    // Apply loaded config to form elements
-                    document.getElementById('apiKey').value = config.apiKey || '';
-                    document.getElementById('tokenLimit').value = config.tokenLimit || 5000;
-                    document.getElementById('systemRole').value = config.systemRole || config.systemRole;
                 }
+                
+                // Apply loaded config to form elements
+                document.getElementById('apiKey').value = config.apiKey || '';
+                document.getElementById('tokenLimit').value = config.tokenLimit || 5000;
+                document.getElementById('systemRole').value = config.systemRole || config.systemRole;
+                document.getElementById('customPrompt').value = config.customPrompt || config.customPrompt;
+                
             } catch (error) {
                 console.error('Error loading configuration:', error);
             }
@@ -431,11 +445,18 @@
                 config.apiKey = document.getElementById('apiKey').value;
                 config.tokenLimit = parseInt(document.getElementById('tokenLimit').value) || 5000;
                 config.systemRole = document.getElementById('systemRole').value;
+                config.customPrompt = document.getElementById('customPrompt').value;
                 
-                localStorage.setItem('textSummarizerConfig', JSON.stringify(config));
-                updateConfigStatus();
-                closeSettings();
-                showStatus('Configuration saved successfully!', 'success');
+                // Save to Tableau settings (more reliable than localStorage)
+                tableau.extensions.settings.set('textSummarizerConfig', JSON.stringify(config));
+                tableau.extensions.settings.saveAsync().then(() => {
+                    updateConfigStatus();
+                    closeSettings();
+                    showStatus('Configuration saved successfully!', 'success');
+                }).catch(error => {
+                    console.error('Error saving configuration:', error);
+                    showStatus('Error saving configuration: ' + error.message, 'error');
+                });
             } catch (error) {
                 console.error('Error saving configuration:', error);
                 showStatus('Error saving configuration: ' + error.message, 'error');
@@ -477,6 +498,24 @@
             // Trigger column load if worksheet is selected
             if (config.worksheet) {
                 onWorksheetChange();
+            }
+        }
+
+        function saveCustomPrompt() {
+            try {
+                config.customPrompt = document.getElementById('customPrompt').value;
+                
+                // Save to Tableau settings
+                tableau.extensions.settings.set('textSummarizerConfig', JSON.stringify(config));
+                tableau.extensions.settings.saveAsync().then(() => {
+                    showStatus('Custom prompt saved successfully!', 'success');
+                }).catch(error => {
+                    console.error('Error saving custom prompt:', error);
+                    showStatus('Error saving custom prompt: ' + error.message, 'error');
+                });
+            } catch (error) {
+                console.error('Error saving custom prompt:', error);
+                showStatus('Error saving custom prompt: ' + error.message, 'error');
             }
         }
 
