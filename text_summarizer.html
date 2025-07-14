@@ -80,11 +80,29 @@
 
         select, input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 4px 10px;
             border: 2px solid #e1e5e9;
             border-radius: 6px;
             font-size: 14px;
             transition: border-color 0.3s;
+            background-color: #fff;
+            color: #222;
+            min-width: 200px;
+            height: 32px;
+        }
+
+        /* Specific styling for worksheet and column dropdowns for visibility */
+        #worksheetSelect, #columnSelect {
+            background-color: #fff;
+            color: #222;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            height: 32px;
+            min-width: 200px;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 4px 10px;
+            line-height: normal;
         }
 
         .modal select, .modal input, .modal textarea {
@@ -344,50 +362,17 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
-                <div class="form-group">
-                    <label for="worksheetSelect">Select Worksheet:</label>
-                    <select id="worksheetSelect">
-                        <option value="">Loading worksheets...</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="columnSelect">Select Text Column:</label>
-                    <select id="columnSelect">
-                        <option value="">Select a worksheet first</option>
-                    </select>
-                </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="worksheetSelect" style="font-size: 13px;">Select Worksheet:</label>
+                <select id="worksheetSelect" style="height: 32px; font-size: 13px; width: 100%;">
+                    <option value="">Loading worksheets...</option>
+                </select>
             </div>
-
-            <div class="form-group">
-                <label for="apiKey">OpenAI API Key:</label>
-                <input type="password" id="apiKey" placeholder="Enter your OpenAI API key">
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
-                <div class="form-group">
-                    <label for="apiEndpoint">API Endpoint:</label>
-                    <input type="text" id="apiEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
-                    <small style="color: #666; font-size: 13px;">Change for custom endpoints or different providers</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="model">Model:</label>
-                    <select id="model">
-                        <option value="gpt-4o-mini">GPT-4o Mini (Fastest, Cheapest)</option>
-                        <option value="gpt-4o">GPT-4o (Best Quality)</option>
-                        <option value="gpt-4">GPT-4 (Legacy)</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                        <option value="custom">Custom Model</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group" id="customModelGroup" style="display: none;">
-                <label for="customModel">Custom Model Name:</label>
-                <input type="text" id="customModel" placeholder="Enter custom model name">
-                <small style="color: #666; font-size: 13px;">For custom deployments or other providers</small>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="columnSelect" style="font-size: 13px;">Select Text Column:</label>
+                <select id="columnSelect" style="height: 32px; font-size: 13px; width: 100%;">
+                    <option value="">Select a worksheet first</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -398,7 +383,25 @@
 
             <div class="form-group">
                 <label for="systemRole">System Role:</label>
-                <textarea id="systemRole" rows="4" placeholder="Define the AI's role and behavior...">You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.</textarea>
+                <textarea id="systemRole" rows="2" placeholder="Define the AI's role and behavior..." style="font-size: 13px; min-height: 40px;">You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.</textarea>
+            </div>
+
+            <hr style="margin: 18px 0;">
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input type="password" id="apiKey" placeholder="Enter your API key">
+            </div>
+            <div class="form-group">
+                <label for="apiEndpoint">API Endpoint: <span style="font-weight: normal; color: #888; font-size: 12px;">(Only for Azure, leave blank for OpenAI)</span></label>
+                <input type="text" id="apiEndpoint" placeholder="https://swedencentral.api.cognitive.microsoft.com">
+            </div>
+            <div class="form-group">
+                <label for="modelOrDeployment">Model (for OpenAI) or Deployment (for Azure):</label>
+                <input type="text" id="modelOrDeployment" placeholder="e.g. gpt-4o-mini or your-deployment-name">
+            </div>
+            <div class="form-group" id="apiVersionGroup" style="display: none;">
+                <label for="apiVersion">API Version (Azure only):</label>
+                <input type="text" id="apiVersion" placeholder="2024-12-01-preview">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px;">
@@ -414,8 +417,9 @@
             worksheet: '',
             column: '',
             apiKey: '',
-            apiEndpoint: 'https://api.openai.com/v1/chat/completions',
-            model: 'gpt-4o-mini',
+            apiEndpoint: '',
+            modelOrDeployment: '',
+            apiVersion: '',
             tokenLimit: 5000,
             systemRole: 'You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data.',
             customPrompt: 'Provide a comprehensive summary of the following text entries. Focus on the key themes, main points, and overall insights:'
@@ -446,7 +450,6 @@
         // Configuration Management
         function loadConfiguration() {
             try {
-                // Load from Tableau settings (more reliable than localStorage)
                 const settings = tableau.extensions.settings.getAll();
                 
                 if (settings.textSummarizerConfig) {
@@ -454,21 +457,15 @@
                     config = { ...config, ...savedConfig };
                 }
                 
-                // Apply loaded config to form elements
-                document.getElementById('apiKey').value = config.apiKey || '';
-                document.getElementById('apiEndpoint').value = config.apiEndpoint || 'https://api.openai.com/v1/chat/completions';
-                document.getElementById('model').value = config.model || 'gpt-4o-mini';
+                document.getElementById('worksheetSelect').value = config.worksheet || '';
+                document.getElementById('columnSelect').value = config.column || '';
                 document.getElementById('tokenLimit').value = config.tokenLimit || 5000;
-                document.getElementById('systemRole').value = config.systemRole || config.systemRole;
-                document.getElementById('customPrompt').value = config.customPrompt || config.customPrompt;
-                
-                // Handle custom model
-                if (config.model && !['gpt-4o-mini', 'gpt-4o', 'gpt-4', 'gpt-3.5-turbo'].includes(config.model)) {
-                    document.getElementById('model').value = 'custom';
-                    document.getElementById('customModel').value = config.model;
-                    document.getElementById('customModelGroup').style.display = 'block';
-                }
-                
+                document.getElementById('systemRole').value = config.systemRole || '';
+                document.getElementById('apiKey').value = config.apiKey || '';
+                document.getElementById('apiEndpoint').value = config.apiEndpoint || '';
+                document.getElementById('modelOrDeployment').value = config.modelOrDeployment || '';
+                document.getElementById('apiVersion').value = config.apiVersion || '';
+                showApiVersionField();
             } catch (error) {
                 console.error('Error loading configuration:', error);
             }
@@ -478,22 +475,12 @@
             try {
                 config.worksheet = document.getElementById('worksheetSelect').value;
                 config.column = document.getElementById('columnSelect').value;
-                config.apiKey = document.getElementById('apiKey').value;
-                config.apiEndpoint = document.getElementById('apiEndpoint').value || 'https://api.openai.com/v1/chat/completions';
-                
-                // Handle model selection
-                const selectedModel = document.getElementById('model').value;
-                if (selectedModel === 'custom') {
-                    config.model = document.getElementById('customModel').value || 'gpt-4o-mini';
-                } else {
-                    config.model = selectedModel;
-                }
-                
                 config.tokenLimit = parseInt(document.getElementById('tokenLimit').value) || 5000;
                 config.systemRole = document.getElementById('systemRole').value;
-                config.customPrompt = document.getElementById('customPrompt').value;
-                
-                // Save to Tableau settings (more reliable than localStorage)
+                config.apiKey = document.getElementById('apiKey').value;
+                config.apiEndpoint = document.getElementById('apiEndpoint').value;
+                config.modelOrDeployment = document.getElementById('modelOrDeployment').value;
+                config.apiVersion = document.getElementById('apiVersion').value;
                 tableau.extensions.settings.set('textSummarizerConfig', JSON.stringify(config));
                 tableau.extensions.settings.saveAsync().then(() => {
                     updateConfigStatus();
@@ -537,24 +524,13 @@
             // Set current values
             document.getElementById('worksheetSelect').value = config.worksheet || '';
             document.getElementById('columnSelect').value = config.column || '';
-            document.getElementById('apiKey').value = config.apiKey || '';
-            document.getElementById('apiEndpoint').value = config.apiEndpoint || 'https://api.openai.com/v1/chat/completions';
             document.getElementById('tokenLimit').value = config.tokenLimit || 5000;
             document.getElementById('systemRole').value = config.systemRole || '';
-            
-            // Handle model selection
-            const modelSelect = document.getElementById('model');
-            if (config.model && ['gpt-4o-mini', 'gpt-4o', 'gpt-4', 'gpt-3.5-turbo'].includes(config.model)) {
-                modelSelect.value = config.model;
-                document.getElementById('customModelGroup').style.display = 'none';
-            } else if (config.model) {
-                modelSelect.value = 'custom';
-                document.getElementById('customModel').value = config.model;
-                document.getElementById('customModelGroup').style.display = 'block';
-            } else {
-                modelSelect.value = 'gpt-4o-mini';
-                document.getElementById('customModelGroup').style.display = 'none';
-            }
+            document.getElementById('apiKey').value = config.apiKey || '';
+            document.getElementById('apiEndpoint').value = config.apiEndpoint || '';
+            document.getElementById('modelOrDeployment').value = config.modelOrDeployment || '';
+            document.getElementById('apiVersion').value = config.apiVersion || '';
+            showApiVersionField();
             
             // Trigger column load if worksheet is selected
             if (config.worksheet) {
@@ -562,12 +538,12 @@
             }
             
             // Add model selection event listener
-            document.getElementById('model').addEventListener('change', function() {
-                const customModelGroup = document.getElementById('customModelGroup');
-                if (this.value === 'custom') {
-                    customModelGroup.style.display = 'block';
+            document.getElementById('modelOrDeployment').addEventListener('change', function() {
+                const apiVersionGroup = document.getElementById('apiVersionGroup');
+                if (this.value && this.value.includes('api.openai.com')) {
+                    apiVersionGroup.style.display = 'none';
                 } else {
-                    customModelGroup.style.display = 'none';
+                    apiVersionGroup.style.display = 'block';
                 }
             });
         }
@@ -594,6 +570,12 @@
             document.getElementById('settingsModal').style.display = 'none';
         }
 
+        function showProviderFields() {
+            const provider = document.getElementById('provider').value;
+            document.getElementById('openaiFields').style.display = provider === 'openai' ? 'block' : 'none';
+            document.getElementById('azureFields').style.display = provider === 'azure' ? 'block' : 'none';
+        }
+        document.getElementById('provider').addEventListener('change', showProviderFields);
 
 
         function populateWorksheetDropdown() {
@@ -613,6 +595,10 @@
                 worksheetSelect.appendChild(option);
             });
             
+            // Restore saved selection
+            if (config.worksheet) {
+                worksheetSelect.value = config.worksheet;
+            }
             worksheetSelect.addEventListener('change', onWorksheetChange);
         }
 
@@ -651,7 +637,7 @@
                 }
             });
             
-            // Restore saved column selection
+            // Restore saved selection
             if (config.column) {
                 columnSelect.value = config.column;
             }
@@ -661,7 +647,7 @@
             const customPrompt = document.getElementById('customPrompt').value.trim();
             
             // Basic validation
-            if (!config.worksheet || !config.column || !config.apiKey || !config.apiEndpoint || !config.model) {
+            if (!config.worksheet || !config.column || !config.apiKey || !config.modelOrDeployment) {
                 showStatus('Please configure your settings first (click the gear icon)', 'error');
                 openSettings();
                 return;
@@ -727,28 +713,60 @@
                 
                 showStatus('Sending request to AI API...', 'info');
                 
-                const response = await fetch(config.apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: config.model,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: config.systemRole
-                            },
-                            {
-                                role: 'user',
-                                content: fullPrompt
-                            }
-                        ],
-                        max_tokens: Math.min(config.tokenLimit, 4000),
-                        temperature: 0.3
-                    })
-                });
+                let response;
+                // Detect provider
+                const isAzure = config.apiEndpoint && !config.apiEndpoint.includes('api.openai.com');
+                if (isAzure) {
+                    if (!config.apiEndpoint || !config.apiVersion) {
+                        showStatus('Please provide Azure API Endpoint and API Version.', 'error');
+                        showLoading(false);
+                        return;
+                    }
+                    response = await fetch(config.apiEndpoint + '/openai/deployments/' + config.modelOrDeployment + '/chat/completions?api-version=' + config.apiVersion, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'api-key': config.apiKey
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: config.systemRole
+                                },
+                                {
+                                    role: 'user',
+                                    content: fullPrompt
+                                }
+                            ],
+                            max_tokens: Math.min(config.tokenLimit, 4000),
+                            temperature: 0.3
+                        })
+                    });
+                } else {
+                    response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${config.apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: config.modelOrDeployment,
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: config.systemRole
+                                },
+                                {
+                                    role: 'user',
+                                    content: fullPrompt
+                                }
+                            ],
+                            max_tokens: Math.min(config.tokenLimit, 4000),
+                            temperature: 0.3
+                        })
+                    });
+                }
                 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -806,6 +824,16 @@
                 setTimeout(() => {
                     statusDiv.style.display = 'none';
                 }, 5000);
+            }
+        }
+
+        function showApiVersionField() {
+            const endpoint = document.getElementById('apiEndpoint').value;
+            const group = document.getElementById('apiVersionGroup');
+            if (endpoint && !endpoint.includes('api.openai.com')) {
+                group.style.display = 'block';
+            } else {
+                group.style.display = 'none';
             }
         }
 
