@@ -543,6 +543,11 @@
                         🔐 <strong>Data Protection:</strong> API keys and sensitive data are encrypted before saving to prevent exposure in exported workbooks.
                     </small>
                 </div>
+                <div style="background: #e8f5e8; padding: 12px; border-radius: 6px; margin-top: 10px; border-left: 3px solid #4caf50;">
+                    <small style="color: #2e7d32; font-weight: 500;">
+                        💾 <strong>Storage:</strong> Settings are saved to both Tableau and local storage for reliability across different hosting environments.
+                    </small>
+                </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 10px;">
@@ -805,6 +810,7 @@
         // Configuration Management
         function loadConfiguration() {
             try {
+                // Try Tableau settings first
                 const settings = tableau.extensions.settings.getAll();
                 
                 if (settings.textSummarizerConfig) {
@@ -812,6 +818,19 @@
                     // Decrypt sensitive data before loading
                     const decryptedConfig = decryptSensitiveData(savedConfig);
                     config = { ...config, ...decryptedConfig };
+                } else {
+                    // Fallback to localStorage for external hosting
+                    const localConfig = localStorage.getItem('textSummarizerConfig');
+                    if (localConfig) {
+                        try {
+                            const savedConfig = JSON.parse(localConfig);
+                            const decryptedConfig = decryptSensitiveData(savedConfig);
+                            config = { ...config, ...decryptedConfig };
+                            console.log('Loaded configuration from localStorage fallback');
+                        } catch (error) {
+                            console.error('Error loading from localStorage:', error);
+                        }
+                    }
                 }
                 
                 document.getElementById('worksheetSelect').value = config.worksheet || '';
@@ -828,6 +847,18 @@
                 document.getElementById('customPrompt').value = config.customPrompt || 'Provide a comprehensive summary of the following text entries. Focus on the key themes, main points, and overall insights:';
             } catch (error) {
                 console.error('Error loading configuration:', error);
+                // Try localStorage as last resort
+                try {
+                    const localConfig = localStorage.getItem('textSummarizerConfig');
+                    if (localConfig) {
+                        const savedConfig = JSON.parse(localConfig);
+                        const decryptedConfig = decryptSensitiveData(savedConfig);
+                        config = { ...config, ...decryptedConfig };
+                        console.log('Loaded configuration from localStorage after error');
+                    }
+                } catch (localError) {
+                    console.error('Error loading from localStorage fallback:', localError);
+                }
             }
         }
 
@@ -846,14 +877,33 @@
                 // Encrypt sensitive data before saving
                 const encryptedConfig = encryptSensitiveData(config);
                 
+                // Save to Tableau settings
                 tableau.extensions.settings.set('textSummarizerConfig', JSON.stringify(encryptedConfig));
                 tableau.extensions.settings.saveAsync().then(() => {
+                    // Also save to localStorage as fallback
+                    try {
+                        localStorage.setItem('textSummarizerConfig', JSON.stringify(encryptedConfig));
+                        console.log('Configuration saved to both Tableau settings and localStorage');
+                    } catch (localError) {
+                        console.warn('Could not save to localStorage:', localError);
+                    }
+                    
                     updateConfigStatus();
                     closeSettings();
                     showStatus('Configuration saved successfully!', 'success');
                 }).catch(error => {
-                    console.error('Error saving configuration:', error);
-                    showStatus('Error saving configuration: ' + error.message, 'error');
+                    console.error('Error saving to Tableau settings:', error);
+                    // Fallback to localStorage only
+                    try {
+                        localStorage.setItem('textSummarizerConfig', JSON.stringify(encryptedConfig));
+                        console.log('Configuration saved to localStorage fallback');
+                        updateConfigStatus();
+                        closeSettings();
+                        showStatus('Configuration saved to local storage!', 'success');
+                    } catch (localError) {
+                        console.error('Error saving to localStorage:', localError);
+                        showStatus('Error saving configuration: ' + localError.message, 'error');
+                    }
                 });
             } catch (error) {
                 console.error('Error saving configuration:', error);
@@ -923,10 +973,25 @@
                 // Save to Tableau settings
                 tableau.extensions.settings.set('textSummarizerConfig', JSON.stringify(encryptedConfig));
                 tableau.extensions.settings.saveAsync().then(() => {
+                    // Also save to localStorage as fallback
+                    try {
+                        localStorage.setItem('textSummarizerConfig', JSON.stringify(encryptedConfig));
+                        console.log('Custom prompt saved to both Tableau settings and localStorage');
+                    } catch (localError) {
+                        console.warn('Could not save to localStorage:', localError);
+                    }
                     showStatus('Custom prompt saved successfully!', 'success');
                 }).catch(error => {
-                    console.error('Error saving custom prompt:', error);
-                    showStatus('Error saving custom prompt: ' + error.message, 'error');
+                    console.error('Error saving to Tableau settings:', error);
+                    // Fallback to localStorage only
+                    try {
+                        localStorage.setItem('textSummarizerConfig', JSON.stringify(encryptedConfig));
+                        console.log('Custom prompt saved to localStorage fallback');
+                        showStatus('Custom prompt saved to local storage!', 'success');
+                    } catch (localError) {
+                        console.error('Error saving to localStorage:', localError);
+                        showStatus('Error saving custom prompt: ' + localError.message, 'error');
+                    }
                 });
             } catch (error) {
                 console.error('Error saving custom prompt:', error);
