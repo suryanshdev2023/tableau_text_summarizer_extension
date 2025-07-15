@@ -188,19 +188,34 @@
         /* Rich text formatting styles */
         .result-text h1, .result-text h2, .result-text h3, .result-text h4, .result-text h5, .result-text h6 {
             color: #333;
-            margin: 15px 0 10px 0;
+            margin: 20px 0 12px 0;
             font-weight: 600;
             line-height: 1.3;
         }
 
-        .result-text h1 { font-size: 1.4em; border-bottom: 2px solid #667eea; padding-bottom: 5px; }
-        .result-text h2 { font-size: 1.3em; border-bottom: 1px solid #e1e5e9; padding-bottom: 3px; }
-        .result-text h3 { font-size: 1.2em; }
+        .result-text h1 { 
+            font-size: 1.5em; 
+            border-bottom: 2px solid #667eea; 
+            padding-bottom: 8px; 
+            margin-top: 0;
+        }
+        .result-text h2 { 
+            font-size: 1.3em; 
+            border-bottom: 1px solid #e1e5e9; 
+            padding-bottom: 5px; 
+            margin-top: 25px;
+        }
+        .result-text h3 { 
+            font-size: 1.2em; 
+            margin-top: 20px;
+            color: #555;
+        }
         .result-text h4 { font-size: 1.1em; }
 
         .result-text p {
-            margin: 10px 0;
+            margin: 12px 0;
             line-height: 1.6;
+            color: #444;
         }
 
         .result-text strong, .result-text b {
@@ -214,27 +229,37 @@
         }
 
         .result-text ul, .result-text ol {
-            margin: 10px 0;
-            padding-left: 25px;
+            margin: 15px 0;
+            padding-left: 30px;
         }
 
         .result-text li {
-            margin: 5px 0;
+            margin: 8px 0;
             line-height: 1.5;
+            color: #444;
+        }
+
+        .result-text ul li {
+            list-style-type: disc;
+        }
+
+        .result-text ol li {
+            list-style-type: decimal;
         }
 
         .result-text blockquote {
             border-left: 4px solid #667eea;
-            margin: 15px 0;
-            padding: 10px 15px;
+            margin: 20px 0;
+            padding: 15px 20px;
             background: #f8f9fa;
             font-style: italic;
             color: #555;
+            border-radius: 0 4px 4px 0;
         }
 
         .result-text code {
             background: #f1f3f4;
-            padding: 2px 6px;
+            padding: 3px 6px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
@@ -245,9 +270,9 @@
             background: #f6f8fa;
             border: 1px solid #e1e5e9;
             border-radius: 4px;
-            padding: 12px;
+            padding: 15px;
             overflow-x: auto;
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         .result-text pre code {
@@ -258,8 +283,8 @@
 
         .result-text hr {
             border: none;
-            border-top: 1px solid #e1e5e9;
-            margin: 20px 0;
+            border-top: 2px solid #e1e5e9;
+            margin: 25px 0;
         }
 
         .result-text table {
@@ -671,12 +696,74 @@
             
             let html = text;
             
-            // Headers
-            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            // Split into lines for better processing
+            let lines = html.split('\n');
+            let processedLines = [];
+            let inList = false;
+            let listType = '';
             
-            // Bold and Italic
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                
+                // Headers
+                if (line.startsWith('### ')) {
+                    processedLines.push(`<h3>${line.substring(4)}</h3>`);
+                } else if (line.startsWith('## ')) {
+                    processedLines.push(`<h2>${line.substring(3)}</h2>`);
+                } else if (line.startsWith('# ')) {
+                    processedLines.push(`<h1>${line.substring(2)}</h1>`);
+                }
+                // Horizontal rules
+                else if (line === '---' || line === '***') {
+                    processedLines.push('<hr>');
+                }
+                // Lists
+                else if (line.match(/^[*-]\s+/)) {
+                    if (!inList) {
+                        processedLines.push('<ul>');
+                        inList = true;
+                        listType = 'ul';
+                    }
+                    processedLines.push(`<li>${line.substring(2)}</li>`);
+                } else if (line.match(/^\d+\.\s+/)) {
+                    if (!inList || listType !== 'ol') {
+                        if (inList) processedLines.push(`</${listType}>`);
+                        processedLines.push('<ol>');
+                        inList = true;
+                        listType = 'ol';
+                    }
+                    processedLines.push(`<li>${line.replace(/^\d+\.\s+/, '')}</li>`);
+                }
+                // Blockquotes
+                else if (line.startsWith('> ')) {
+                    processedLines.push(`<blockquote>${line.substring(2)}</blockquote>`);
+                }
+                // Empty lines
+                else if (line === '') {
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                    }
+                    processedLines.push('');
+                }
+                // Regular paragraphs
+                else {
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                    }
+                    processedLines.push(`<p>${line}</p>`);
+                }
+            }
+            
+            // Close any open list
+            if (inList) {
+                processedLines.push(`</${listType}>`);
+            }
+            
+            html = processedLines.join('\n');
+            
+            // Process inline formatting
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
             html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
@@ -686,40 +773,10 @@
             html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
             html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
             
-            // Blockquotes
-            html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
-            
-            // Lists
-            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-            html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
-            html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
-            
-            // Wrap lists in ul/ol tags
-            html = html.replace(/(<li>.*<\/li>)/gs, function(match) {
-                const items = match.match(/<li>.*?<\/li>/g);
-                if (items) {
-                    return '<ul>' + items.join('') + '</ul>';
-                }
-                return match;
-            });
-            
-            // Horizontal rules
-            html = html.replace(/^---$/gim, '<hr>');
-            html = html.replace(/^\*\*\*$/gim, '<hr>');
-            
-            // Line breaks
-            html = html.replace(/\n\n/g, '</p><p>');
-            html = html.replace(/\n/g, '<br>');
-            
-            // Wrap in paragraphs if not already wrapped
-            if (!html.includes('<h1>') && !html.includes('<h2>') && !html.includes('<h3>') && 
-                !html.includes('<ul>') && !html.includes('<blockquote>') && !html.includes('<pre>')) {
-                html = '<p>' + html + '</p>';
-            }
-            
-            // Clean up empty paragraphs
+            // Clean up empty paragraphs and extra whitespace
             html = html.replace(/<p><\/p>/g, '');
-            html = html.replace(/<p><br><\/p>/g, '');
+            html = html.replace(/<p>\s*<\/p>/g, '');
+            html = html.replace(/\n\s*\n/g, '\n');
             
             return html;
         }
