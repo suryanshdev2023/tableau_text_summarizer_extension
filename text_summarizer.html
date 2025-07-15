@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Summarizer - AI Extension</title>
+    <title>Tableau GPT Assistant - AI Extension</title>
     <script src="tableau.extensions.1.latest.js"></script>
     <style>
         * {
@@ -489,7 +489,7 @@
     <div class="container">
         <div class="header">
             <button class="settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
-            <h1>📝 AI Text Summarizer</h1>
+            <h1>🤖 Tableau GPT Assistant</h1>
         </div>
 
         <div class="config-status" id="configStatus">
@@ -510,7 +510,7 @@
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Processing your text with AI...</p>
+            <p>Processing your data with AI...</p>
         </div>
 
         <div id="status"></div>
@@ -531,21 +531,11 @@
         <div class="modal-content">
             <span class="close" onclick="closeSettings()">&times;</span>
             <div class="modal-header">
-                <h2>⚙️ Configuration Settings</h2>
+                <h2>⚙️ Tableau GPT Assistant Configuration</h2>
                 <p>Configure your data source and AI settings</p>
-                <div style="background: #e8f4fd; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #1976d2;">
-                    <small style="color: #1976d2; font-weight: 500;">
-                        🔒 <strong>Security:</strong> Your settings are stored locally and encrypted by Tableau. Only you can access them.
-                    </small>
-                </div>
                 <div style="background: #fff3cd; padding: 12px; border-radius: 6px; margin-top: 10px; border-left: 3px solid #ffc107;">
                     <small style="color: #856404; font-weight: 500;">
-                        🔐 <strong>Data Protection:</strong> API keys and sensitive data are encrypted before saving to prevent exposure in exported workbooks.
-                    </small>
-                </div>
-                <div style="background: #e8f5e8; padding: 12px; border-radius: 6px; margin-top: 10px; border-left: 3px solid #4caf50;">
-                    <small style="color: #2e7d32; font-weight: 500;">
-                        💾 <strong>Storage:</strong> Settings are saved to both Tableau and local storage for reliability across different hosting environments.
+                        🔐 <strong>Data Protection:</strong> Your settings are stored locally and encrypted by Tableau. API keys and sensitive data are encrypted before saving to prevent exposure in exported workbooks.
                     </small>
                 </div>
             </div>
@@ -571,7 +561,7 @@
 
             <div class="form-group">
                 <label for="systemRole">System Role:</label>
-                <textarea id="systemRole" rows="2" placeholder="Define the AI's role and behavior..." style="font-size: 13px; min-height: 40px;">You are a professional text summarizer and analyst. Provide clear, concise, and insightful analysis that captures the essence of the provided text data. Use markdown formatting to structure your response with headers, bullet points, bold text, and proper organization for better readability.</textarea>
+                <textarea id="systemRole" rows="2" placeholder="Define the AI's role and behavior..." style="font-size: 13px; min-height: 40px;">You are a professional AI assistant that helps analyze and process data from Tableau. Provide clear, concise, and insightful analysis based on the user\'s specific requirements. Use markdown formatting to structure your response with headers, bullet points, bold text, and proper organization for better readability.</textarea>
             </div>
 
             <hr style="margin: 18px 0;">
@@ -1219,7 +1209,7 @@
                 document.getElementById('formatToggle').textContent = '📝 Plain Text';
                 document.getElementById('formatToggle').classList.add('active');
                 
-                showStatus(`✅ Generation completed! Processed ${textData.length} entries.`, 'success');
+                showStatus(`✅ AI Analysis completed! Processed ${textData.length} entries.`, 'success');
                 
             } catch (error) {
                 console.error('Error:', error);
